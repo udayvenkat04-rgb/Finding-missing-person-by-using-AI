@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Missing Person</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-search"></i>
+            <span>Missing Person Finder</span>
+        </div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/dashboard.html">Dashboard</a>
+            <button id="logout-btn" class="btn-login" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard" style="max-width: 600px;">
+        <h1>Report Missing Person</h1>
+        
+        <form id="report-form" onsubmit="handleReportSubmit(event)" style="margin-top: 2rem;">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="age">Age</label>
+                <input type="number" id="age" required>
+            </div>
+
+            <div class="form-group">
+                <label for="gender">Gender</label>
+                <select id="gender" required>
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="location">Last Seen Location</label>
+                <input type="text" id="location" required>
+            </div>
+
+            <div class="form-group">
+                <label for="date">Last Seen Date</label>
+                <input type="date" id="date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description (clothing, features, etc.)</label>
+                <textarea id="description" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="contact">Contact Details (phone/email)</label>
+                <input type="text" id="contact" required>
+            </div>
+
+            <div class="form-group">
+                <label for="images">Upload Photos (multiple)</label>
+                <input type="file" id="images" multiple accept="image/*" required>
+                <small>Upload clear photos of the person's face</small>
+            </div>
+
+            <button type="submit" class="btn-submit">Submit Report</button>
+        </form>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        async function handleReportSubmit(event) {
+            event.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('name', document.getElementById('name').value);
+            formData.append('age', document.getElementById('age').value);
+            formData.append('gender', document.getElementById('gender').value);
+            formData.append('location', document.getElementById('location').value);
+            formData.append('date', document.getElementById('date').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('contact', document.getElementById('contact').value);
+            
+            const files = document.getElementById('images').files;
+            for (let i = 0; i < files.length; i++) {
+                formData.append('images', files[i]);
+            }
+            
+            try {
+                await reportMissingPerson(formData);
+                alert('Report submitted successfully!');
+                window.location.href = '/dashboard.html';
+            } catch (error) {
+                alert('Error submitting report: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

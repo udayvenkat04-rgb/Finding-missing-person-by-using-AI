@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Missing Person Finder</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-search"></i>
+            <span>Missing Person Finder</span>
+        </div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/dashboard.html" class="active">Dashboard</a>
+            <a href="#" id="admin-link" style="display: none;">Admin</a>
+            <button id="logout-btn" class="btn-login" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard">
+        <div class="dashboard-header">
+            <h1>My Reports</h1>
+            <button class="btn-report" onclick="window.location.href='/report.html'">
+                <i class="fas fa-plus"></i> Report Missing Person
+            </button>
+        </div>
+
+        <div class="reports-table" id="reports-table">
+            <div class="table-header">
+                <div>Name</div>
+                <div>Date Reported</div>
+                <div>Last Seen</div>
+                <div>Status</div>
+                <div>Match</div>
+                <div>Actions</div>
+            </div>
+            <div id="reports-list">
+                <!-- Reports will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        async function loadMyReports() {
+            try {
+                const reports = await getMyReports();
+                const reportsList = document.getElementById('reports-list');
+                
+                if (reports.length === 0) {
+                    reportsList.innerHTML = '<div style="text-align: center; padding: 2rem;">No reports found</div>';
+                    return;
+                }
+                
+                reportsList.innerHTML = reports.map(report => {
+                    const date = new Date(report.created_at).toLocaleDateString();
+                    const statusClass = `status-badge status-${report.status}`;
+                    
+                    return `
+                        <div class="table-row">
+                            <div>${report.name}, ${report.age}</div>
+                            <div>${date}</div>
+                            <div>${report.last_seen_location}</div>
+                            <div><span class="${statusClass}">${report.status}</span></div>
+                            <div>
+                                ${report.match_found ? 
+                                    `<span class="match-highlight">${report.similarity_percentage.toFixed(1)}% match</span>` : 
+                                    'No match'}
+                            </div>
+                            <div>
+                                <button onclick="viewReport('${report._id}')" class="btn-login">View</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading reports:', error);
+            }
+        }
+
+        function viewReport(reportId) {
+            alert('View report details - Feature coming soon!');
+        }
+
+        document.addEventListener('DOMContentLoaded', loadMyReports);
+    </script>
+</body>
+</html>

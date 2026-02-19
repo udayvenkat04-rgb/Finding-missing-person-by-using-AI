@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Missing Person Finder</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-search"></i>
+            <span>Missing Person Finder - Admin</span>
+        </div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/admin.html" class="active">Admin</a>
+            <button id="logout-btn" class="btn-login" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard">
+        <h1>Admin Dashboard</h1>
+        
+        <!-- Tabs -->
+        <div style="display: flex; gap: 1rem; margin: 2rem 0;">
+            <button class="btn-login" onclick="showTab('pending')">Pending Reports</button>
+            <button class="btn-login" onclick="showTab('all')">All Reports</button>
+            <button class="btn-login" onclick="showTab('unidentified')">Unidentified Persons</button>
+            <button class="btn-report" onclick="showUploadModal()">Upload Unidentified</button>
+        </div>
+
+        <!-- Pending Reports Tab -->
+        <div id="pending-tab" class="tab-content">
+            <h2>Pending Reports</h2>
+            <div class="reports-table">
+                <div class="table-header">
+                    <div>Name</div>
+                    <div>Reporter</div>
+                    <div>Date</div>
+                    <div>Location</div>
+                    <div>Actions</div>
+                </div>
+                <div id="pending-list"></div>
+            </div>
+        </div>
+
+        <!-- All Reports Tab -->
+        <div id="all-tab" class="tab-content" style="display: none;">
+            <h2>All Reports</h2>
+            <div class="reports-table">
+                <div class="table-header">
+                    <div>Name</div>
+                    <div>Reporter</div>
+                    <div>Status</div>
+                    <div>Match</div>
+                    <div>Actions</div>
+                </div>
+                <div id="all-list"></div>
+            </div>
+        </div>
+
+        <!-- Unidentified Persons Tab -->
+        <div id="unidentified-tab" class="tab-content" style="display: none;">
+            <h2>Unidentified Persons</h2>
+            <div class="cases-grid" id="unidentified-grid"></div>
+        </div>
+    </div>
+
+    <!-- Upload Unidentified Modal -->
+    <div id="upload-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeUploadModal()">&times;</span>
+            <h2>Upload Unidentified Person</h2>
+            <form onsubmit="handleUnidentifiedUpload(event)">
+                <div class="form-group">
+                    <label for="location">Location Found</label>
+                    <input type="text" id="location" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="images">Photos</label>
+                    <input type="file" id="images" multiple accept="image/*" required>
+                </div>
+                <button type="submit" class="btn-submit">Upload</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let allReports = [];
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.getElementById(`${tab}-tab`).style.display = 'block';
+            
+            if (tab === 'pending') loadPendingReports();
+            if (tab === 'all') loadAllReports();
+            if (tab === 'unidentified') loadUnidentified();
+        }
+
+        async function loadPendingReports() {
+            try {
+                const reports = await getAllReports();
+                const pending = reports.filter(r => r.status === 'pending');
+                
+                const list = document.getElementById('pending-list');
+                list.innerHTML = pending.map(report => `
+                    <div class="table-row">
+                        <div>${report.name}, ${report.age}</div>
+                        <div>${report.user_id}</div>
+                        <div>${new Date(report.created_at).toLocaleDateString()}</div>
+                        <div>${report.last_seen_location}</div>
+                        <div>
+                            <button onclick="updateStatus('${report._id}', 'approved')" class="btn-login" style="background: #27ae60;">Approve</button>
+                            <button onclick="updateStatus('${report._id}', 'rejected')" class="btn-login" style="background: #e74c3c;">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading pending reports:', error);
+            }
+        }
+
+        async function loadAllReports() {
+            try {
+                allReports = await getAllReports();
+                const list = document.getElementById('all-list');
+                
+                list.innerHTML = allReports.map(report => {
+                    const statusClass = `status-badge status-${report.status}`;
+                    return `
+                        <div class="table-row">
+                            <div>${report.name}, ${report.age}</div>
+                            <div>${report.user_id}</div>
+                            <div><span class="${statusClass}">${report.status}</span></div>
+                            <div>
+                                ${report.match_found ? 
+                                    `<span class="match-highlight">${report.similarity_percentage.toFixed(1)}% match</span>` : 
+                                    'No match'}
+                            </div>
+                            <div>
+                                <button onclick="updateStatus('${report._id}', 'resolved')" class="btn-login">Mark Resolved</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading all reports:', error);
+            }
+        }
+
+        async function loadUnidentified() {
+            try {
+                const unidentified = await getAllUnidentified();
+                const grid = document.getElementById('unidentified-grid');
+                
+                grid.innerHTML = unidentified.map(person => `
+                    <div class="case-card">
+                        <img src="${person.images[0]}" alt="Unidentified" class="case-image">
+                        <div class="case-info">
+                            <p><i class="fas fa-map-marker-alt"></i> Found at: ${person.location}</p>
+                            <p>${person.description}</p>
+                            <p><small>Uploaded: ${new Date(person.uploaded_at).toLocaleDateString()}</small></p>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading unidentified:', error);
+            }
+        }
+
+        async function updateStatus(personId, status) {
+            try {
+                await updateMissingPersonStatus(personId, status);
+                alert(`Status updated to ${status}`);
+                loadPendingReports();
+                loadAllReports();
+            } catch (error) {
+                alert('Error updating status: ' + error.message);
+            }
+        }
+
+        function showUploadModal() {
+            document.getElementById('upload-modal').classList.add('active');
+        }
+
+        function closeUploadModal() {
+            document.getElementById('upload-modal').classList.remove('active');
+        }
+
+        async function handleUnidentifiedUpload(event) {
+            event.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('location', document.getElementById('location').value);
+            formData.append('description', document.getElementById('description').value);
+            
+            const files = document.getElementById('images').files;
+            for (let i = 0; i < files.length; i++) {
+                formData.append('images', files[i]);
+            }
+            
+            try {
+                const result = await uploadUnidentifiedPerson(formData);
+                alert(`Upload successful! ${result.matches_found} potential matches found.`);
+                closeUploadModal();
+                showTab('unidentified');
+            } catch (error) {
+                alert('Error uploading: ' + error.message);
+            }
+        }
+
+        // Load pending reports by default
+        document.addEventListener('DOMContentLoaded', () => showTab('pending'));
+    </script>
+</body>
+</html>

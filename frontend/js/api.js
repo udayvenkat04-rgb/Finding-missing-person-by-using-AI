@@ -1,0 +1,123 @@
+const API_BASE_URL = 'http://localhost:5000/api';
+
+// Store token in localStorage
+function setToken(token) {
+    localStorage.setItem('token', token);
+}
+
+function getToken() {
+    return localStorage.getItem('token');
+}
+
+function removeToken() {
+    localStorage.removeItem('token');
+}
+
+// Store user info
+function setUser(user) {
+    localStorage.setItem('user', JSON.stringify(user));
+}
+
+function getUser() {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+}
+
+function removeUser() {
+    localStorage.removeItem('user');
+}
+
+// API calls
+async function apiCall(endpoint, method = 'GET', data = null, isFormData = false) {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const headers = {};
+    
+    if (getToken()) {
+        headers['Authorization'] = `Bearer ${getToken()}`;
+    }
+    
+    if (!isFormData) {
+        headers['Content-Type'] = 'application/json';
+    }
+    
+    const config = {
+        method,
+        headers,
+    };
+    
+    if (data) {
+        if (isFormData) {
+            config.body = data;
+        } else {
+            config.body = JSON.stringify(data);
+        }
+    }
+    
+    try {
+        const response = await fetch(url, config);
+        const responseData = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(responseData.error || 'API call failed');
+        }
+        
+        return responseData;
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+}
+
+// Auth APIs
+async function register(userData) {
+    return apiCall('/register', 'POST', userData);
+}
+
+async function login(credentials) {
+    const data = await apiCall('/login', 'POST', credentials);
+    if (data.token) {
+        setToken(data.token);
+        setUser(data.user);
+    }
+    return data;
+}
+
+async function adminLogin(credentials) {
+    const data = await apiCall('/admin/login', 'POST', credentials);
+    if (data.token) {
+        setToken(data.token);
+        setUser(data.user);
+    }
+    return data;
+}
+
+// Missing Person APIs
+async function reportMissingPerson(formData) {
+    return apiCall('/missing-person/report', 'POST', formData, true);
+}
+
+async function getMyReports() {
+    return apiCall('/missing-person/my-reports');
+}
+
+async function getAllReports() {
+    return apiCall('/missing-person/all');
+}
+
+async function searchMissingPersons(params) {
+    const queryString = new URLSearchParams(params).toString();
+    return apiCall(`/search?${queryString}`);
+}
+
+// Admin APIs
+async function updateMissingPersonStatus(personId, status) {
+    return apiCall(`/admin/missing-person/${personId}/status`, 'PUT', { status });
+}
+
+async function uploadUnidentifiedPerson(formData) {
+    return apiCall('/admin/unidentified/upload', 'POST', formData, true);
+}
+
+async function getAllUnidentified() {
+    return apiCall('/admin/unidentified/all');
+}

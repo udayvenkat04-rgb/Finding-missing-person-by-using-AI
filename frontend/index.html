@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missing Person Finder - Bringing Loved Ones Home</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-search"></i>
+            <span>Missing Person Finder</span>
+        </div>
+        <div class="nav-links">
+            <a href="/" class="active">Home</a>
+            <a href="#" id="dashboard-link" style="display: none;">Dashboard</a>
+            <a href="#" id="admin-link" style="display: none;">Admin</a>
+            <button class="btn-login" onclick="showLoginModal()">Login</button>
+            <button class="btn-register" onclick="showRegisterModal()">Register</button>
+            <button id="logout-btn" class="btn-login" style="display: none;" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Help Bring Them Home</h1>
+        <p>Report missing persons and help reunite families using AI-powered facial recognition</p>
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="Search by name or location...">
+            <button onclick="searchMissing()"><i class="fas fa-search"></i> Search</button>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="stat-item">
+            <i class="fas fa-users"></i>
+            <h3 id="total-cases">0</h3>
+            <p>Total Cases</p>
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-check-circle"></i>
+            <h3 id="resolved-cases">0</h3>
+            <p>Resolved Cases</p>
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-clock"></i>
+            <h3 id="active-cases">0</h3>
+            <p>Active Cases</p>
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-smile"></i>
+            <h3 id="reunited">0</h3>
+            <p>Reunited Families</p>
+        </div>
+    </section>
+
+    <!-- Recent Cases -->
+    <section class="recent-cases">
+        <h2>Recent Missing Persons Reports</h2>
+        <div class="cases-grid" id="cases-grid">
+            <!-- Cases will be loaded here dynamically -->
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeLoginModal()">&times;</span>
+            <h2>Login</h2>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="btn-submit">Login</button>
+            </form>
+            <p style="text-align: center; margin-top: 1rem;">
+                Don't have an account? <a href="#" onclick="showRegisterModal(); closeLoginModal();">Register</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRegisterModal()">&times;</span>
+            <h2>Register</h2>
+            <form onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="register-name">Full Name</label>
+                    <input type="text" id="register-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm-password">Confirm Password</label>
+                    <input type="password" id="register-confirm-password" required>
+                </div>
+                <button type="submit" class="btn-submit">Register</button>
+            </form>
+            <p style="text-align: center; margin-top: 1rem;">
+                Already have an account? <a href="#" onclick="showLoginModal(); closeRegisterModal();">Login</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

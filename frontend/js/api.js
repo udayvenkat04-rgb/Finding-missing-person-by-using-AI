@@ -1,6 +1,7 @@
+// API Configuration
 const API_BASE_URL = 'http://localhost:5000/api';
 
-// Store token in localStorage
+// Token management
 function setToken(token) {
     localStorage.setItem('token', token);
 }
@@ -13,7 +14,7 @@ function removeToken() {
     localStorage.removeItem('token');
 }
 
-// Store user info
+// User management
 function setUser(user) {
     localStorage.setItem('user', JSON.stringify(user));
 }
@@ -27,9 +28,29 @@ function removeUser() {
     localStorage.removeItem('user');
 }
 
-// API calls
+// Check if user is logged in
+function isLoggedIn() {
+    return !!getToken();
+}
+
+// Check if user is admin
+function isAdmin() {
+    const user = getUser();
+    return user && user.is_admin === true;
+}
+
+// Logout function
+function logout() {
+    removeToken();
+    removeUser();
+    window.location.href = '/';
+}
+
+// API call function with error handling
 async function apiCall(endpoint, method = 'GET', data = null, isFormData = false) {
     const url = `${API_BASE_URL}${endpoint}`;
+    console.log(`🌐 API Call: ${method} ${url}`);
+    
     const headers = {};
     
     if (getToken()) {
@@ -43,14 +64,11 @@ async function apiCall(endpoint, method = 'GET', data = null, isFormData = false
     const config = {
         method,
         headers,
+        mode: 'cors'
     };
     
     if (data) {
-        if (isFormData) {
-            config.body = data;
-        } else {
-            config.body = JSON.stringify(data);
-        }
+        config.body = isFormData ? data : JSON.stringify(data);
     }
     
     try {
@@ -58,13 +76,25 @@ async function apiCall(endpoint, method = 'GET', data = null, isFormData = false
         const responseData = await response.json();
         
         if (!response.ok) {
-            throw new Error(responseData.error || 'API call failed');
+            throw new Error(responseData.error || `HTTP error! status: ${response.status}`);
         }
         
         return responseData;
     } catch (error) {
         console.error('API Error:', error);
         throw error;
+    }
+}
+
+// Test connection
+async function testConnection() {
+    try {
+        const data = await apiCall('/test');
+        console.log('✅ Backend connected:', data);
+        return true;
+    } catch (error) {
+        console.error('❌ Backend connection failed:', error);
+        return false;
     }
 }
 
@@ -104,6 +134,10 @@ async function getAllReports() {
     return apiCall('/missing-person/all');
 }
 
+async function getReportById(reportId) {
+    return apiCall(`/missing-person/${reportId}`);
+}
+
 async function searchMissingPersons(params) {
     const queryString = new URLSearchParams(params).toString();
     return apiCall(`/search?${queryString}`);
@@ -121,3 +155,6 @@ async function uploadUnidentifiedPerson(formData) {
 async function getAllUnidentified() {
     return apiCall('/admin/unidentified/all');
 }
+
+// Initialize connection test
+testConnection();

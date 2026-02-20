@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Missing Person Finder - Bringing Loved Ones Home</title>
+    <title>Missing Person Finder - Bring Loved Ones Home</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Ensure theme loads immediately */
+        :root { color-scheme: light dark; }
+    </style>
 </head>
 <body>
     <!-- Navigation -->
@@ -18,9 +22,12 @@
             <a href="/" class="active">Home</a>
             <a href="#" id="dashboard-link" style="display: none;">Dashboard</a>
             <a href="#" id="admin-link" style="display: none;">Admin</a>
-            <button class="btn-login" onclick="showLoginModal()">Login</button>
-            <button class="btn-register" onclick="showRegisterModal()">Register</button>
-            <button id="logout-btn" class="btn-login" style="display: none;" onclick="logout()">Logout</button>
+            <button class="theme-toggle" onclick="toggleAppleTheme()" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="btn btn-login" onclick="window.location.href='/login.html'">Login</button>
+            <button class="btn btn-register" onclick="window.location.href='/register.html'">Register</button>
+            <button class="btn btn-logout" style="display: none;" onclick="logout()">Logout</button>
         </div>
     </nav>
 
@@ -62,64 +69,64 @@
     <section class="recent-cases">
         <h2>Recent Missing Persons Reports</h2>
         <div class="cases-grid" id="cases-grid">
-            <!-- Cases will be loaded here dynamically -->
+            <!-- Cases will be loaded here -->
         </div>
     </section>
 
-    <!-- Login Modal -->
-    <div id="login-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeLoginModal()">&times;</span>
-            <h2>Login</h2>
-            <form onsubmit="handleLogin(event)">
-                <div class="form-group">
-                    <label for="login-email">Email</label>
-                    <input type="email" id="login-email" required>
-                </div>
-                <div class="form-group">
-                    <label for="login-password">Password</label>
-                    <input type="password" id="login-password" required>
-                </div>
-                <button type="submit" class="btn-submit">Login</button>
-            </form>
-            <p style="text-align: center; margin-top: 1rem;">
-                Don't have an account? <a href="#" onclick="showRegisterModal(); closeLoginModal();">Register</a>
-            </p>
-        </div>
+    <!-- Connection Status -->
+    <div class="connection-status checking" id="connection-status">
+        <i class="fas fa-spinner fa-spin"></i>
+        <span>Checking connection...</span>
     </div>
 
-    <!-- Register Modal -->
-    <div id="register-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeRegisterModal()">&times;</span>
-            <h2>Register</h2>
-            <form onsubmit="handleRegister(event)">
-                <div class="form-group">
-                    <label for="register-name">Full Name</label>
-                    <input type="text" id="register-name" required>
-                </div>
-                <div class="form-group">
-                    <label for="register-email">Email</label>
-                    <input type="email" id="register-email" required>
-                </div>
-                <div class="form-group">
-                    <label for="register-password">Password</label>
-                    <input type="password" id="register-password" required>
-                </div>
-                <div class="form-group">
-                    <label for="register-confirm-password">Confirm Password</label>
-                    <input type="password" id="register-confirm-password" required>
-                </div>
-                <button type="submit" class="btn-submit">Register</button>
-            </form>
-            <p style="text-align: center; margin-top: 1rem;">
-                Already have an account? <a href="#" onclick="showLoginModal(); closeRegisterModal();">Login</a>
-            </p>
-        </div>
-    </div>
-
+    <!-- Scripts -->
     <script src="js/api.js"></script>
+    <script src="js/theme.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/main.js"></script>
+    <script>
+        // Initialize theme and connection status
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update connection status
+            updateConnectionStatus();
+            
+            // Load stats and cases
+            if (typeof loadStats === 'function') loadStats();
+            if (typeof loadRecentCases === 'function') loadRecentCases();
+        });
+
+        // Update connection status
+        async function updateConnectionStatus() {
+            const statusDiv = document.getElementById('connection-status');
+            try {
+                const response = await fetch('http://localhost:5000/api/test');
+                if (response.ok) {
+                    statusDiv.className = 'connection-status connected';
+                    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i><span>Connected to server</span>';
+                } else {
+                    statusDiv.className = 'connection-status disconnected';
+                    statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Server error</span>';
+                }
+            } catch (error) {
+                statusDiv.className = 'connection-status disconnected';
+                statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Cannot connect to server</span>';
+            }
+        }
+
+        // Search function
+        window.searchMissing = function() {
+            const searchTerm = document.getElementById('search-input').value;
+            if (searchTerm.trim()) {
+                window.location.href = `/search.html?q=${encodeURIComponent(searchTerm)}`;
+            }
+        };
+
+        // Handle enter key in search
+        document.getElementById('search-input')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchMissing();
+            }
+        });
+    </script>
 </body>
 </html>

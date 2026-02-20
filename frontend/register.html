@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Missing Person Finder</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-search"></i>
+            <span>Missing Person Finder</span>
+        </div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/login.html">Login</a>
+            <a href="/register.html" class="active">Register</a>
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Register Container -->
+    <div class="login-container">
+        <div class="login-card register-card">
+            <div class="login-header">
+                <i class="fas fa-user-plus"></i>
+                <h2>Create Account</h2>
+                <p>Join us in helping find missing persons</p>
+            </div>
+
+            <!-- Alert Container -->
+            <div id="alert-container"></div>
+
+            <!-- Registration Form -->
+            <form id="register-form" onsubmit="handleRegister(event)">
+                <div class="name-row">
+                    <div class="form-group">
+                        <label for="first-name">First Name</label>
+                        <div class="input-group">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="first-name" placeholder="John" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="last-name">Last Name</label>
+                        <div class="input-group">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="last-name" placeholder="Doe" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" placeholder="john@example.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <div class="input-group">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" id="phone" placeholder="+1 234 567 8900" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" placeholder="Create a password" onkeyup="checkPasswordStrength()" required>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('password')"></i>
+                    </div>
+                    <div class="password-strength">
+                        <div class="password-strength-bar" id="password-strength-bar"></div>
+                    </div>
+                    <div class="password-strength-text" id="password-strength-text"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm-password">Confirm Password</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="confirm-password" placeholder="Confirm your password" required>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('confirm-password')"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="user-type">I am a</label>
+                    <div class="input-group">
+                        <i class="fas fa-tag"></i>
+                        <select id="user-type" required>
+                            <option value="">Select user type</option>
+                            <option value="family">Family Member</option>
+                            <option value="volunteer">Volunteer</option>
+                            <option value="ngo">NGO Representative</option>
+                            <option value="police">Law Enforcement</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="terms">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
+                </div>
+
+                <button type="submit" class="register-btn" id="register-btn">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+
+                <div class="login-link">
+                    Already have an account? <a href="/login.html">Login here</a>
+                </div>
+            </form>
+
+            <!-- Social Registration -->
+            <div class="social-login">
+                <p>Or sign up with</p>
+                <div class="social-icons">
+                    <a href="#" class="social-icon google" onclick="socialRegister('google')">
+                        <i class="fab fa-google"></i>
+                    </a>
+                    <a href="#" class="social-icon facebook" onclick="socialRegister('facebook')">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="social-icon twitter" onclick="socialRegister('twitter')">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="social-icon github" onclick="socialRegister('github')">
+                        <i class="fab fa-github"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="connection-status checking" id="connection-status">
+        <i class="fas fa-spinner fa-spin"></i>
+        <span>Checking connection...</span>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Theme Management
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.querySelector('.theme-toggle i');
+            
+            body.classList.toggle('dark-theme');
+            
+            if (body.classList.contains('dark-theme')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+                showToast('Dark theme activated', 'info');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+                showToast('Light theme activated', 'info');
+            }
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const icon = document.querySelector('.theme-toggle i');
+            
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                if (icon) {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                }
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 
+                               type === 'error' ? 'fa-exclamation-circle' : 
+                               'fa-info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Toggle password visibility
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = event.target;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Check password strength
+        function checkPasswordStrength() {
+            const password = document.getElementById('password').value;
+            const strengthBar = document.getElementById('password-strength-bar');
+            const strengthText = document.getElementById('password-strength-text');
+            
+            let strength = 0;
+            let message = '';
+            let color = '';
+            
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]+/)) strength++;
+            if (password.match(/[A-Z]+/)) strength++;
+            if (password.match(/[0-9]+/)) strength++;
+            if (password.match(/[$@#&!]+/)) strength++;
+            
+            switch(strength) {
+                case 0:
+                case 1:
+                    message = 'Weak';
+                    color = 'var(--danger)';
+                    break;
+                case 2:
+                case 3:
+                    message = 'Medium';
+                    color = 'var(--warning)';
+                    break;
+                case 4:
+                case 5:
+                    message = 'Strong';
+                    color = 'var(--success)';
+                    break;
+            }
+            
+            strengthBar.style.width = (strength * 20) + '%';
+            strengthBar.style.background = color;
+            strengthText.textContent = message;
+            strengthText.style.color = color;
+        }
+
+        // Show alert
+        function showAlert(message, type = 'error') {
+            const alertContainer = document.getElementById('alert-container');
+            const icon = type === 'success' ? 'fa-check-circle' : 
+                       type === 'info' ? 'fa-info-circle' : 'fa-exclamation-circle';
+            
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type}">
+                    <i class="fas ${icon}"></i>
+                    <span>${message}</span>
+                    <i class="fas fa-times close-btn" onclick="this.parentElement.remove()"></i>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                const alert = document.querySelector('.alert');
+                if (alert) alert.remove();
+            }, 5000);
+        }
+
+        // Set loading state
+        function setLoading(isLoading) {
+            const button = document.getElementById('register-btn');
+            if (isLoading) {
+                button.innerHTML = '<span class="loading-spinner"></span> Creating Account...';
+                button.disabled = true;
+            } else {
+                button.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+                button.disabled = false;
+            }
+        }
+
+        // Handle registration
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const firstName = document.getElementById('first-name').value;
+            const lastName = document.getElementById('last-name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const userType = document.getElementById('user-type').value;
+            const terms = document.getElementById('terms').checked;
+            
+            // Validation
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match!');
+                showToast('Password mismatch', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showAlert('Password must be at least 6 characters long!');
+                showToast('Password too short', 'error');
+                return;
+            }
+            
+            if (!terms) {
+                showAlert('You must agree to the Terms of Service and Privacy Policy');
+                showToast('Please accept terms', 'error');
+                return;
+            }
+            
+            setLoading(true);
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: firstName + ' ' + lastName,
+                        email: email,
+                        phone: phone,
+                        password: password,
+                        userType: userType
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Registration successful! Redirecting to login...', 'success');
+                    showToast('Account created successfully!', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 2000);
+                } else {
+                    showAlert(data.error || 'Registration failed. Please try again.');
+                    showToast('Registration failed', 'error');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showAlert('Connection error. Please make sure the backend server is running.');
+                showToast('Connection error', 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Social register placeholder
+        function socialRegister(provider) {
+            showToast(`${provider} registration coming soon!`, 'info');
+            showAlert(`${provider} registration will be available in the next update!`, 'info');
+        }
+
+        // Update connection status
+        async function updateConnectionStatus() {
+            const statusDiv = document.getElementById('connection-status');
+            try {
+                const response = await fetch('http://localhost:5000/api/test');
+                if (response.ok) {
+                    statusDiv.className = 'connection-status connected';
+                    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i><span>Connected to server</span>';
+                } else {
+                    statusDiv.className = 'connection-status disconnected';
+                    statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Server error</span>';
+                }
+            } catch (error) {
+                statusDiv.className = 'connection-status disconnected';
+                statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Cannot connect to server</span>';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            updateConnectionStatus();
+            
+            // Add floating animation to register card
+            document.querySelector('.login-card').style.animation = 'slideUp 0.8s var(--transition-bounce), float 6s ease-in-out infinite';
+        });
+    </script>
+</body>
+</html>

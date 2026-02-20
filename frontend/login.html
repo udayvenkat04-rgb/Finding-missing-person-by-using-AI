@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Missing Person Finder</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-search"></i>
+            <span>Missing Person Finder</span>
+        </div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/login.html" class="active">Login</a>
+            <a href="/register.html">Register</a>
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Login Container -->
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="fas fa-user-circle"></i>
+                <h2>Welcome Back!</h2>
+                <p>Login to access your dashboard</p>
+            </div>
+
+            <!-- Alert Container -->
+            <div id="alert-container"></div>
+
+            <!-- Tab Buttons -->
+            <div class="tab-buttons">
+                <button class="tab-btn active" id="user-tab" onclick="switchTab('user')">
+                    <i class="fas fa-user"></i> User Login
+                </button>
+                <button class="tab-btn" id="admin-tab" onclick="switchTab('admin')">
+                    <i class="fas fa-shield-alt"></i> Admin Login
+                </button>
+            </div>
+
+            <!-- User Login Form -->
+            <form id="user-login-form" class="login-form active" onsubmit="handleUserLogin(event)">
+                <div class="form-group">
+                    <label for="user-email">Email Address</label>
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="user-email" placeholder="Enter your email" value="user@example.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="user-password">Password</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="user-password" placeholder="Enter your password" value="password123" required>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('user-password')"></i>
+                    </div>
+                </div>
+
+                <div class="remember-forgot">
+                    <label class="remember">
+                        <input type="checkbox" id="remember-me"> Remember me
+                    </label>
+                    <a href="#" class="forgot-link">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="login-btn" id="user-login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+
+                <div class="register-link">
+                    Don't have an account? <a href="/register.html">Register here</a>
+                </div>
+            </form>
+
+            <!-- Admin Login Form -->
+            <form id="admin-login-form" class="login-form" onsubmit="handleAdminLogin(event)">
+                <div class="form-group">
+                    <label for="admin-email">Admin Email</label>
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="admin-email" placeholder="Enter admin email" value="admin@missingfinder.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="admin-password">Admin Password</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="admin-password" placeholder="Enter admin password" value="Admin@123" required>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('admin-password')"></i>
+                    </div>
+                </div>
+
+                <div class="remember-forgot">
+                    <label class="remember">
+                        <input type="checkbox" id="admin-remember"> Remember me
+                    </label>
+                    <a href="#" class="forgot-link">Reset Password</a>
+                </div>
+
+                <button type="submit" class="login-btn" id="admin-login-btn">
+                    <i class="fas fa-shield-alt"></i> Admin Login
+                </button>
+            </form>
+
+            <!-- Demo Credentials -->
+            <div class="demo-credentials">
+                <p><i class="fas fa-info-circle"></i> Demo Credentials</p>
+                <div class="cred-item">
+                    <i class="fas fa-user"></i>
+                    <span>User: user@example.com / password123</span>
+                </div>
+                <div class="cred-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Admin: admin@missingfinder.com / Admin@123</span>
+                </div>
+            </div>
+
+            <!-- Social Login -->
+            <div class="social-login">
+                <p>Or login with</p>
+                <div class="social-icons">
+                    <a href="#" class="social-icon google" onclick="socialLogin('google')">
+                        <i class="fab fa-google"></i>
+                    </a>
+                    <a href="#" class="social-icon facebook" onclick="socialLogin('facebook')">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="social-icon twitter" onclick="socialLogin('twitter')">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="social-icon github" onclick="socialLogin('github')">
+                        <i class="fab fa-github"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="connection-status checking" id="connection-status">
+        <i class="fas fa-spinner fa-spin"></i>
+        <span>Checking connection...</span>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Theme Management
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.querySelector('.theme-toggle i');
+            
+            body.classList.toggle('dark-theme');
+            
+            if (body.classList.contains('dark-theme')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+                showToast('Dark theme activated', 'info');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+                showToast('Light theme activated', 'info');
+            }
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const icon = document.querySelector('.theme-toggle i');
+            
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                if (icon) {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                }
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 
+                               type === 'error' ? 'fa-exclamation-circle' : 
+                               'fa-info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Switch between user and admin tabs
+        function switchTab(tab) {
+            const userTab = document.getElementById('user-tab');
+            const adminTab = document.getElementById('admin-tab');
+            const userForm = document.getElementById('user-login-form');
+            const adminForm = document.getElementById('admin-login-form');
+            
+            if (tab === 'user') {
+                userTab.classList.add('active');
+                adminTab.classList.remove('active');
+                userForm.classList.add('active');
+                adminForm.classList.remove('active');
+            } else {
+                adminTab.classList.add('active');
+                userTab.classList.remove('active');
+                adminForm.classList.add('active');
+                userForm.classList.remove('active');
+            }
+        }
+
+        // Toggle password visibility
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = event.target;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Show alert message
+        function showAlert(message, type = 'error') {
+            const alertContainer = document.getElementById('alert-container');
+            const icon = type === 'success' ? 'fa-check-circle' : 
+                       type === 'info' ? 'fa-info-circle' : 'fa-exclamation-circle';
+            
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type}">
+                    <i class="fas ${icon}"></i>
+                    <span>${message}</span>
+                    <i class="fas fa-times close-btn" onclick="this.parentElement.remove()"></i>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                const alert = document.querySelector('.alert');
+                if (alert) alert.remove();
+            }, 5000);
+        }
+
+        // Set loading state
+        function setLoading(buttonId, isLoading) {
+            const button = document.getElementById(buttonId);
+            if (isLoading) {
+                button.innerHTML = '<span class="loading-spinner"></span> Logging in...';
+                button.disabled = true;
+            } else {
+                if (buttonId === 'user-login-btn') {
+                    button.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                } else {
+                    button.innerHTML = '<i class="fas fa-shield-alt"></i> Admin Login';
+                }
+                button.disabled = false;
+            }
+        }
+
+        // Handle user login
+        async function handleUserLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('user-email').value;
+            const password = document.getElementById('user-password').value;
+            const remember = document.getElementById('remember-me').checked;
+            
+            setLoading('user-login-btn', true);
+            
+            try {
+                const data = await login({ email, password });
+                
+                if (remember) {
+                    localStorage.setItem('remember', 'true');
+                }
+                
+                showAlert('Login successful! Redirecting...', 'success');
+                showToast('Welcome back!', 'success');
+                
+                setTimeout(() => {
+                    if (data.user.is_admin) {
+                        window.location.href = '/admin.html';
+                    } else {
+                        window.location.href = '/dashboard.html';
+                    }
+                }, 1500);
+            } catch (error) {
+                showAlert(error.message || 'Login failed. Please check your credentials.');
+                showToast('Login failed', 'error');
+            } finally {
+                setLoading('user-login-btn', false);
+            }
+        }
+
+        // Handle admin login
+        async function handleAdminLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            const remember = document.getElementById('admin-remember').checked;
+            
+            setLoading('admin-login-btn', true);
+            
+            try {
+                const data = await adminLogin({ email, password });
+                
+                if (remember) {
+                    localStorage.setItem('remember', 'true');
+                }
+                
+                showAlert('Admin login successful! Redirecting...', 'success');
+                showToast('Welcome Admin!', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = '/admin.html';
+                }, 1500);
+            } catch (error) {
+                showAlert(error.message || 'Admin login failed. Please check your credentials.');
+                showToast('Login failed', 'error');
+            } finally {
+                setLoading('admin-login-btn', false);
+            }
+        }
+
+        // Social login placeholder
+        function socialLogin(provider) {
+            showToast(`${provider} login coming soon!`, 'info');
+            showAlert(`${provider} login will be available in the next update!`, 'info');
+        }
+
+        // Check if already logged in
+        function checkLoggedIn() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                const userData = JSON.parse(user);
+                if (userData.is_admin) {
+                    window.location.href = '/admin.html';
+                } else {
+                    window.location.href = '/dashboard.html';
+                }
+            }
+        }
+
+        // Update connection status
+        async function updateConnectionStatus() {
+            const statusDiv = document.getElementById('connection-status');
+            try {
+                const response = await fetch('http://localhost:5000/api/test');
+                if (response.ok) {
+                    statusDiv.className = 'connection-status connected';
+                    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i><span>Connected to server</span>';
+                } else {
+                    statusDiv.className = 'connection-status disconnected';
+                    statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Server error</span>';
+                }
+            } catch (error) {
+                statusDiv.className = 'connection-status disconnected';
+                statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Cannot connect to server</span>';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            checkLoggedIn();
+            updateConnectionStatus();
+            
+            // Add floating animation to login card
+            document.querySelector('.login-card').style.animation = 'slideUp 0.8s var(--transition-bounce), float 6s ease-in-out infinite';
+        });
+    </script>
+</body>
+</html>
